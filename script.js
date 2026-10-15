@@ -1,6 +1,6 @@
 // ============ ПАРАЛЛАКС ============
 (function(){
-    var layers = document.querySelectorAll('.nebula, .milky-way, .stars, .dust, .black-hole');
+    var layers = document.querySelectorAll('.nebula, .milky-way, .stars, .dust, .bright-stars');
     var mouseX = 0, mouseY = 0;
     var targetX = 0, targetY = 0;
 
@@ -21,12 +21,7 @@
         targetY += (mouseY - targetY) * 0.04;
 
         layers.forEach(function(layer, i){
-            var speed;
-            if (layer.classList.contains('black-hole')) {
-                speed = 0.015;
-            } else {
-                speed = 0.02 + (i % 5) * 0.015;
-            }
+            var speed = 0.015 + (i % 5) * 0.012;
             layer.style.transform = 'translate(' + (targetX * speed * 40) + 'px, ' + (targetY * speed * 40) + 'px)';
         });
 
@@ -35,27 +30,36 @@
     animate();
 })();
 
-// ============ СВЕТЯЩИЕСЯ ЧАСТИЦЫ ============
+// ============ ЧАСТИЦЫ ============
 (function(){
     var container = document.getElementById('particles');
     if (!container) return;
 
+    var colors = [
+        'rgba(150, 200, 255, ',   // голубые
+        'rgba(255, 180, 220, ',   // розовые
+        'rgba(150, 240, 220, ',   // бирюзовые
+        'rgba(220, 200, 255, '    // светлые фиолетовые
+    ];
+
     function createParticle(){
         var p = document.createElement('div');
         p.className = 'particle';
-        var size = Math.random() * 4 + 2;
+        var size = Math.random() * 3 + 1.5;
         p.style.width = size + 'px';
         p.style.height = size + 'px';
         p.style.left = Math.random() * 100 + '%';
         p.style.top = '105%';
-        p.style.background = 'rgba(' + (180 + Math.random() * 75) + ',' + (100 + Math.random() * 80) + ',' + (220 + Math.random() * 35) + ',' + (0.6 + Math.random() * 0.4) + ')';
-        p.style.animationDuration = (Math.random() * 12 + 10) + 's';
+        var color = colors[Math.floor(Math.random() * colors.length)];
+        p.style.background = color + (0.5 + Math.random() * 0.4) + ')';
+        p.style.boxShadow = '0 0 6px 2px ' + color + '0.4)';
+        p.style.animationDuration = (Math.random() * 14 + 12) + 's';
         container.appendChild(p);
-        setTimeout(function(){ p.remove(); }, 23000);
+        setTimeout(function(){ p.remove(); }, 27000);
     }
 
-    setInterval(createParticle, 700);
-    for (var i = 0; i < 6; i++) setTimeout(createParticle, i * 400);
+    setInterval(createParticle, 900);
+    for (var i = 0; i < 5; i++) setTimeout(createParticle, i * 500);
 })();
 
 console.log('Космос для Вари загружен 🖤');
