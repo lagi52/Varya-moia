@@ -1,6 +1,6 @@
 // ============ ПАРАЛЛАКС ============
 (function(){
-    var layers = document.querySelectorAll('.nebula, .milky-way, .stars');
+    var layers = document.querySelectorAll('.nebula, .milky-way, .stars, .dust, .black-hole');
     var mouseX = 0, mouseY = 0;
     var targetX = 0, targetY = 0;
 
@@ -21,7 +21,12 @@
         targetY += (mouseY - targetY) * 0.04;
 
         layers.forEach(function(layer, i){
-            var speed = 0.02 + (i % 4) * 0.02;
+            var speed;
+            if (layer.classList.contains('black-hole')) {
+                speed = 0.015;
+            } else {
+                speed = 0.02 + (i % 5) * 0.015;
+            }
             layer.style.transform = 'translate(' + (targetX * speed * 40) + 'px, ' + (targetY * speed * 40) + 'px)';
         });
 
