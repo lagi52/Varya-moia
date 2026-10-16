@@ -235,20 +235,22 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     pointer-events:none;
 }
 
+/* Кролик — кликабельный, но под канвасом */
 .bunny {
-    font-size:130px;
+    font-size:80px;
     cursor:pointer;
     filter:drop-shadow(0 0 30px rgba(255, 200, 220, 0.7));
     user-select:none;
     z-index:1;
     position:absolute;
     transform:translate(-50%, -50%);
-    pointer-events:none;
+    pointer-events:auto;
     animation:bunnyPulse 2.5s ease-in-out infinite;
+    transition:transform 0.3s ease;
 }
 .bunny-text {
     font-family:"Cormorant Garamond",serif;
-    font-size:22px;
+    font-size:18px;
     color:#e8d8e0;
     letter-spacing:3px;
     z-index:1;
@@ -502,8 +504,8 @@ h2 {
 .finale-line.show { opacity:1; transform:translateY(0); }
 
 @media (max-width:600px) {
-    .bunny { font-size:100px; }
-    .bunny-text { font-size:18px; }
+    .bunny { font-size:60px; }
+    .bunny-text { font-size:15px; }
     .glass-panel { padding:26px 18px; border-radius:18px; }
     h2 { font-size:20px; }
     .option-btn { padding:10px 16px; font-size:13px; min-width:100px; max-width:150px; }
