@@ -1,4 +1,4 @@
-// ============ ГАЛАКТИКА НА CANVAS ============
+// ============ ГАЛАКТИКА НА CANVAS (ОПТИМИЗИРОВАННАЯ) ============
 (function(){
     var canvas = document.getElementById('galaxyCanvas');
     if (!canvas) return;
@@ -6,81 +6,67 @@
 
     var W, H, CX, CY;
     var stars = [];
-    var NUM_STARS = 2500;
     var rotation = 0;
     var mouseX = 0, mouseY = 0;
     var targetX = 0, targetY = 0;
     var offsetX = 0, offsetY = 0;
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    // На телефоне — в 3 раза меньше звёзд
+    var NUM_STARS = isMobile ? 700 : 1800;
+    var lastFrame = 0;
+    var frameInterval = isMobile ? 1000/30 : 1000/60; // 30 fps на телефоне
+    var galaxyImg = null;
 
     function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        // Центр галактики — верхний правый угол экрана (частично за краем)
+        var dpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+        W = canvas.width = window.innerWidth * dpr;
+        H = canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
         CX = W * 0.78;
         CY = H * 0.22;
         buildStars();
+        renderStatic();
     }
 
     function buildStars() {
         stars = [];
-        var arms = 2;              // 2 спиральных рукава
-        var armSpread = 0.55;      // разброс рукавов
-        var innerR = 10;           // внутренний радиус
-        var outerR = Math.min(W, H) * 0.75; // внешний радиус
+        var arms = 2;
+        var armSpread = 0.55;
+        var innerR = 10;
+        var outerR = Math.min(W, H) * 0.75;
 
         for (var i = 0; i < NUM_STARS; i++) {
-            // Расстояние от центра (квадратично — плотнее к центру)
             var t = Math.pow(Math.random(), 0.65);
             var radius = innerR + t * outerR;
-
-            // Угол — спиральные рукава
             var armIndex = i % arms;
             var armAngle = (armIndex / arms) * Math.PI * 2;
-
-            // Спираль
-            var spiralTightness = 3.2; // плотность навивки
+            var spiralTightness = 3.2;
             var angle = armAngle + (radius / outerR) * spiralTightness * Math.PI;
-
-            // Случайный разброс
             var spread = (Math.random() - 0.5) * armSpread * (0.4 + t * 1.5);
             angle += spread;
-
-            // Небольшое радиальное смещение
             radius += (Math.random() - 0.5) * 20 * (0.3 + t);
 
             var x = Math.cos(angle) * radius;
             var y = Math.sin(angle) * radius;
 
-            // Цвет в зависимости от расстояния от центра
-            var color;
             var r, g, b, alpha;
-
             if (t < 0.15) {
-                // Ядро — тёплое, яркое
-                r = 255; g = 240; b = 220;
-                alpha = 0.9;
+                r = 255; g = 240; b = 220; alpha = 0.9;
             } else if (t < 0.4) {
-                // Средняя зона — бело-голубые
-                r = 220; g = 230; b = 255;
-                alpha = 0.75;
+                r = 220; g = 230; b = 255; alpha = 0.75;
             } else if (t < 0.7) {
-                // Рукава — голубые
                 r = 150 + Math.random() * 80;
                 g = 180 + Math.random() * 60;
-                b = 255;
-                alpha = 0.55;
+                b = 255; alpha = 0.55;
             } else {
-                // Края — фиолетово-розовые, тонкие
                 r = 200 + Math.random() * 55;
                 g = 140 + Math.random() * 60;
-                b = 240;
-                alpha = 0.35;
+                b = 240; alpha = 0.35;
             }
-
             alpha *= 0.5 + Math.random() * 0.5;
-
             var size = Math.random() * 1.2 + 0.3;
-            if (t < 0.15) size = Math.random() * 1.8 + 0.8; // ядро крупнее
+            if (t < 0.15) size = Math.random() * 1.8 + 0.8;
 
             stars.push({
                 x: x, y: y,
@@ -92,7 +78,6 @@
         }
     }
 
-    // Параллакс
     document.addEventListener('mousemove', function(e){
         mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
         mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -104,56 +89,74 @@
         }
     }, true);
 
-    function draw() {
+    function renderStatic() {
+        // Рисуем один раз в offscreen canvas
+        galaxyImg = document.createElement('canvas');
+        galaxyImg.width = W;
+        galaxyImg.height = H;
+        var gctx = galaxyImg.getContext('2d');
+
+        gctx.globalCompositeOperation = 'lighter';
+
+        for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            var px = CX + Math.cos(s.angle) * s.radius;
+            var py = CY + Math.sin(s.angle) * s.radius;
+            if (px < -50 || px > W + 50 || py < -50 || py > H + 50) continue;
+
+            if (s.size > 1 && !isMobile) {
+                gctx.shadowBlur = 6;
+                gctx.shadowColor = s.color;
+            } else {
+                gctx.shadowBlur = 0;
+            }
+
+            gctx.fillStyle = s.color;
+            gctx.beginPath();
+            gctx.arc(px, py, s.size, 0, Math.PI * 2);
+            gctx.fill();
+        }
+        gctx.shadowBlur = 0;
+    }
+
+    function draw(timestamp) {
+        requestAnimationFrame(draw);
+
+        // Троттлинг на телефоне
+        if (timestamp - lastFrame < frameInterval) return;
+        lastFrame = timestamp;
+
         ctx.clearRect(0, 0, W, H);
 
-        // Медленное вращение
-        rotation += 0.0004;
+        rotation += isMobile ? 0.0002 : 0.0004;
 
-        // Параллакс
         targetX += (mouseX - targetX) * 0.04;
         targetY += (mouseY - targetY) * 0.04;
         offsetX = targetX * 15;
         offsetY = targetY * 15;
 
-        // Первый проход — свечение (для ярких)
+        ctx.save();
+        ctx.translate(CX + offsetX, CY + offsetY);
+        ctx.rotate(rotation);
+        ctx.translate(-CX, -CY);
         ctx.globalCompositeOperation = 'lighter';
-
-        for (var i = 0; i < stars.length; i++) {
-            var s = stars[i];
-            var a = s.angle + rotation;
-            var px = CX + Math.cos(a) * s.radius + offsetX;
-            var py = CY + Math.sin(a) * s.radius + offsetY;
-
-            // Отсекаем за пределами
-            if (px < -50 || px > W + 50 || py < -50 || py > H + 50) continue;
-
-            // Свечение для крупных
-            if (s.size > 1) {
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = s.color;
-            } else {
-                ctx.shadowBlur = 0;
-            }
-
-            ctx.fillStyle = s.color;
-            ctx.beginPath();
-            ctx.arc(px, py, s.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.shadowBlur = 0;
-        requestAnimationFrame(draw);
+        ctx.drawImage(galaxyImg, 0, 0);
+        ctx.restore();
     }
 
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', function(){
+        clearTimeout(window._resizeT);
+        window._resizeT = setTimeout(resize, 200);
+    });
+
     resize();
-    draw();
+    requestAnimationFrame(draw);
 })();
 
-// ============ ПАРАЛЛАКС ОСТАЛЬНЫХ СЛОЁВ ============
+// ============ ПАРАЛЛАКС ============
 (function(){
     var layers = document.querySelectorAll('.nebula, .stars, .bright-stars');
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     var mouseX = 0, mouseY = 0;
     var targetX = 0, targetY = 0;
     document.addEventListener('mousemove', function(e){
@@ -166,22 +169,27 @@
             mouseY = Math.max(-1, Math.min(1, e.beta / 30));
         }
     }, true);
-    function animate(){
+    var lastFrame = 0;
+    var frameInterval = isMobile ? 1000/30 : 1000/60;
+    function animate(timestamp){
+        requestAnimationFrame(animate);
+        if (timestamp - lastFrame < frameInterval) return;
+        lastFrame = timestamp;
         targetX += (mouseX - targetX) * 0.04;
         targetY += (mouseY - targetY) * 0.04;
         layers.forEach(function(layer, i){
             var speed = 0.015 + (i % 4) * 0.012;
             layer.style.transform = 'translate(' + (targetX * speed * 40) + 'px, ' + (targetY * speed * 40) + 'px)';
         });
-        requestAnimationFrame(animate);
     }
-    animate();
+    animate(0);
 })();
 
 // ============ ЧАСТИЦЫ ============
 (function(){
     var container = document.getElementById('particles');
     if (!container) return;
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     var colors = [
         'rgba(150, 200, 255, ',
         'rgba(255, 180, 220, ',
@@ -203,8 +211,10 @@
         container.appendChild(p);
         setTimeout(function(){ p.remove(); }, 27000);
     }
-    setInterval(createParticle, 900);
-    for (var i = 0; i < 5; i++) setTimeout(createParticle, i * 500);
+    // На телефоне — реже
+    setInterval(createParticle, isMobile ? 2000 : 900);
+    var initial = isMobile ? 2 : 5;
+    for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 700);
 })();
 
-console.log('Галактика для Вари загружена 🌌');
+console.log('Галактика для Вари загружена 🌌');Закрепите элементы буфера обмена, чтобы они не исчезли через часЗакрепите элементы буфера обмена, чтобы они не исчезли через час
