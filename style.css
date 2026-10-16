@@ -81,8 +81,7 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
         radial-gradient(1px 1px at 58% 55%, rgba(230,240,255,0.8), transparent),
         radial-gradient(1px 1px at 68% 32%, rgba(255,200,200,0.85), transparent),
         radial-gradient(1px 1px at 79% 8%, rgba(200,220,255,0.8), transparent),
-        radial-gradient(1px 1px at 88% 48%, rgba(255,255,255,0.95), transparent),
-        radial-gradient(1px 1px at 6% 62%, rgba(255,180,180,0.85), transparent);
+        radial-gradient(1px 1px at 88% 48%, rgba(255,255,255,0.95), transparent);
     background-size:1200px 800px;
     animation:starsDrift 180s linear infinite;
     opacity:0.9;
@@ -94,8 +93,7 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
         radial-gradient(1.8px 1.8px at 42% 15%, rgba(190,230,255,1), transparent),
         radial-gradient(1.6px 1.6px at 62% 35%, rgba(255,150,150,1), transparent),
         radial-gradient(1.8px 1.8px at 78% 68%, rgba(255,255,255,1), transparent),
-        radial-gradient(1.6px 1.6px at 92% 25%, rgba(255,180,180,0.95), transparent),
-        radial-gradient(1.8px 1.8px at 18% 82%, rgba(255,220,240,0.95), transparent);
+        radial-gradient(1.6px 1.6px at 92% 25%, rgba(255,180,180,0.95), transparent);
     background-size:1000px 700px;
     animation:starsDrift 220s linear infinite reverse;
     opacity:0.8;
@@ -104,9 +102,7 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     background-image:
         radial-gradient(2.2px 2.2px at 14% 32%, rgba(255,255,255,1), transparent),
         radial-gradient(2.4px 2.4px at 55% 55%, rgba(255,120,120,1), transparent),
-        radial-gradient(2.2px 2.2px at 82% 18%, rgba(255,220,220,1), transparent),
-        radial-gradient(2.4px 2.4px at 35% 75%, rgba(255,255,255,1), transparent),
-        radial-gradient(2.2px 2.2px at 68% 88%, rgba(255,150,150,1), transparent);
+        radial-gradient(2.2px 2.2px at 82% 18%, rgba(255,220,220,1), transparent);
     background-size:900px 600px;
     animation:starsDrift 260s linear infinite;
     opacity:1;
@@ -231,55 +227,42 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     z-index:20;
 }
 
+/* Кролик — под канвасом, виден через стёртое */
 .scratch-bg {
     position:absolute;
     top:0; left:0;
     width:100%; height:100%;
-    background:rgba(15,8,30,0.7);
     z-index:1;
+    pointer-events:none;
 }
 
 .bunny {
     font-size:130px;
     cursor:pointer;
     filter:drop-shadow(0 0 30px rgba(255, 200, 220, 0.7));
-    transition:transform 0.3s ease;
     user-select:none;
-    z-index:30;
+    z-index:1;
     position:absolute;
-    opacity:0;
+    transform:translate(-50%, -50%);
     pointer-events:none;
-    transform:translate(-50%, -50%) scale(0.5);
-}
-.bunny.visible {
-    opacity:1;
-    pointer-events:auto;
-    transform:translate(-50%, -50%) scale(1);
     animation:bunnyPulse 2.5s ease-in-out infinite;
 }
-.bunny:active { transform:translate(-50%, -50%) scale(1.15); }
-@keyframes bunnyPulse {
-    0%,100% { transform:translate(-50%, -50%) scale(1); filter:drop-shadow(0 0 25px rgba(255, 200, 220, 0.6)); }
-    50% { transform:translate(-50%, -50%) scale(1.08); filter:drop-shadow(0 0 45px rgba(255, 200, 220, 0.95)); }
-}
-
 .bunny-text {
     font-family:"Cormorant Garamond",serif;
     font-size:22px;
     color:#e8d8e0;
     letter-spacing:3px;
-    z-index:31;
+    z-index:1;
     position:absolute;
-    opacity:0;
-    transition:opacity 1s ease 0.5s;
     transform:translate(-50%, -50%);
     pointer-events:none;
     white-space:nowrap;
     text-shadow:0 0 20px rgba(255,180,220,0.6);
-}
-.bunny-text.visible {
-    opacity:1;
     animation:bunnyTextPulse 2.5s ease-in-out infinite;
+}
+@keyframes bunnyPulse {
+    0%,100% { transform:translate(-50%, -50%) scale(1); filter:drop-shadow(0 0 25px rgba(255, 200, 220, 0.6)); }
+    50% { transform:translate(-50%, -50%) scale(1.08); filter:drop-shadow(0 0 45px rgba(255, 200, 220, 0.95)); }
 }
 @keyframes bunnyTextPulse {
     0%,100% { opacity:0.7; }
@@ -300,24 +283,24 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     opacity:0;
     filter:blur(25px);
     transform:scale(1.15);
+    pointer-events:none;
 }
 
-.scratch-hint {
-    position:absolute;
-    bottom:30px; left:50%;
-    transform:translateX(-50%);
-    font-size:12px;
-    letter-spacing:3px;
-    color:rgba(200,180,200,0.5);
-    text-transform:uppercase;
-    pointer-events:none;
-    animation:hintPulse 3s ease-in-out infinite;
-    z-index:3;
-    transition:opacity 0.8s ease;
+/* Финальное растворение всей сцены после клика на кролика */
+#scratchScreen.fade-out {
+    opacity:0;
+    filter:blur(30px);
+    transform:scale(1.25);
+    transition:opacity 1.8s ease, filter 1.8s ease, transform 1.8s ease;
 }
-@keyframes hintPulse {
-    0%,100% { opacity:0.4; }
-    50% { opacity:1; }
+#scratchScreen.fade-out .bunny {
+    transform:translate(-50%, -50%) scale(2);
+    opacity:0;
+    transition:transform 1.8s ease, opacity 1.8s ease;
+}
+#scratchScreen.fade-out .bunny-text {
+    opacity:0;
+    transition:opacity 1s ease;
 }
 
 .iris-circle {
@@ -333,10 +316,10 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     box-shadow:0 0 60px 20px rgba(255, 200, 220, 0.8);
 }
 .iris-circle.expand {
-    animation:irisExpand 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation:irisExpand 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 .iris-circle.collapse {
-    animation:irisCollapse 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation:irisCollapse 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 @keyframes irisExpand {
     0% { width:10px; height:10px; opacity:0; }
