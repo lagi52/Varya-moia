@@ -187,17 +187,19 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ ============
+// ============ СТИРАНИЕ — ПРОСТОЙ И БЫСТРЫЙ ВАРИАНТ ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
     var scratching = false;
     var revealedMax = false;
+    var totalScratched = 0;
 
     function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        totalScratched = 0;
         drawCover();
     }
 
@@ -221,27 +223,24 @@ var TELEGRAM_CHAT_ID = '5262922399';
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    // Радиус стирания 75
+    // Радиус маленький — 40
     function scratch(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x, y, 75, 0, Math.PI * 2);
+        ctx.arc(x, y, 40, 0, Math.PI * 2);
         ctx.fill();
+        // Считаем стёртое: примерная площадь одного мазка
+        totalScratched += Math.PI * 40 * 40;
+        checkRevealed();
     }
 
     function checkRevealed() {
         if (revealedMax) return;
-        var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var total = 0, clear = 0;
-        // Проверяем каждый 150-й пиксель (быстро)
-        for (var i = 3; i < img.data.length; i += 150) {
-            total++;
-            if (img.data[i] === 0) clear++;
-        }
-        // Порог 15% — слой исчезает очень быстро
-        if (clear / total > 0.15) {
+        // Порог: стёрто ~12% экрана
+        var threshold = window.innerWidth * window.innerHeight * 0.12;
+        if (totalScratched > threshold) {
             revealedMax = true;
-            canvas.style.transition = 'opacity 1s ease';
+            canvas.style.transition = 'opacity 0.8s ease';
             canvas.style.opacity = '0';
             setTimeout(function(){
                 canvas.style.display = 'none';
@@ -249,16 +248,16 @@ var TELEGRAM_CHAT_ID = '5262922399';
                 document.getElementById('bunny').classList.add('visible');
                 document.getElementById('bunnyText').classList.add('visible');
                 document.getElementById('scratchHint').style.display = 'none';
-            }, 1000);
+            }, 800);
         }
     }
 
     canvas.addEventListener('mousedown', function(e){ scratching = true; var p = getPos(e); scratch(p.x, p.y); });
-    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); checkRevealed(); });
+    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); });
     canvas.addEventListener('mouseup', function(){ scratching = false; });
     canvas.addEventListener('mouseleave', function(){ scratching = false; });
-    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; var p = getPos(e); scratch(p.x, p.y); checkRevealed(); }, { passive: false });
-    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); checkRevealed(); }, { passive: false });
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; var p = getPos(e); scratch(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); }, { passive: false });
     canvas.addEventListener('touchend', function(){ scratching = false; });
 
     window.addEventListener('resize', resize);
@@ -269,14 +268,12 @@ var TELEGRAM_CHAT_ID = '5262922399';
 function placeBunnyRandomly() {
     var bunny = document.getElementById('bunny');
     var text = document.getElementById('bunnyText');
-    // Случайное место в центре экрана (без крайностей)
     var minX = 25, maxX = 75;
     var minY = 30, maxY = 70;
     var x = minX + Math.random() * (maxX - minX);
     var y = minY + Math.random() * (maxY - minY);
     bunny.style.left = x + '%';
     bunny.style.top = y + '%';
-    // Надпись прямо под зайчиком
     text.style.left = x + '%';
     text.style.top = (y + 15) + '%';
 }
