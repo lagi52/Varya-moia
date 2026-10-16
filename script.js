@@ -1,4 +1,4 @@
-// ============ ГАЛАКТИКА НА CANVAS (ЯРКАЯ, АДАПТИВНАЯ) ============
+// ============ ГАЛАКТИКА НА CANVAS (МАЛЕНЬКАЯ, В УГЛУ) ============
 (function(){
     var canvas = document.getElementById('galaxyCanvas');
     if (!canvas) return;
@@ -11,7 +11,7 @@
     var targetX = 0, targetY = 0;
     var offsetX = 0, offsetY = 0;
     var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 700;
-    var NUM_STARS = isMobile ? 1400 : 2600;
+    var NUM_STARS = isMobile ? 900 : 1600;
     var lastFrame = 0;
     var frameInterval = isMobile ? 1000/30 : 1000/60;
     var galaxyImg = null;
@@ -23,12 +23,13 @@
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
 
+        // Галактика в правом верхнем углу, маленькая
         if (isMobile) {
-            CX = W * 0.6;
-            CY = H * 0.32;
+            CX = W * 0.78;
+            CY = H * 0.18;
         } else {
-            CX = W * 0.75;
-            CY = H * 0.25;
+            CX = W * 0.82;
+            CY = H * 0.20;
         }
 
         buildStars();
@@ -39,9 +40,10 @@
         stars = [];
         var arms = 2;
         var armSpread = 0.6;
-        var innerR = 8;
+        var innerR = 4;
         var sizeBase = Math.min(W, H);
-        var outerR = isMobile ? sizeBase * 1.0 : sizeBase * 0.95;
+        // Галактика МАЛЕНЬКАЯ — 30% от меньшей стороны
+        var outerR = isMobile ? sizeBase * 0.35 : sizeBase * 0.38;
 
         for (var i = 0; i < NUM_STARS; i++) {
             var t = Math.pow(Math.random(), 0.55);
@@ -52,7 +54,7 @@
             var angle = armAngle + (radius / outerR) * spiralTightness * Math.PI;
             var spread = (Math.random() - 0.5) * armSpread * (0.4 + t * 1.6);
             angle += spread;
-            radius += (Math.random() - 0.5) * 22 * (0.3 + t);
+            radius += (Math.random() - 0.5) * 10 * (0.3 + t);
 
             var x = Math.cos(angle) * radius;
             var y = Math.sin(angle) * radius;
@@ -75,13 +77,13 @@
 
             var size;
             if (t < 0.12) {
-                size = Math.random() * 2.5 + 1.5;
+                size = Math.random() * 1.6 + 0.9;
             } else if (t < 0.4) {
-                size = Math.random() * 1.6 + 0.8;
+                size = Math.random() * 1.2 + 0.5;
             } else {
-                size = Math.random() * 1.4 + 0.4;
+                size = Math.random() * 1.0 + 0.3;
             }
-            if (isMobile) size *= 1.4;
+            if (isMobile) size *= 1.2;
 
             stars.push({
                 x: x, y: y,
@@ -110,49 +112,19 @@
         galaxyImg.height = H;
         var gctx = galaxyImg.getContext('2d');
 
-        gctx.fillStyle = '#000105';
-        gctx.fillRect(0, 0, W, H);
-
-        // Ядро
-        var coreR = Math.min(W, H) * 0.35;
+        // ===== ЯДРО БЕЗ ЧЁРНОГО ПЯТНА =====
+        // Сначала яркое свечение
+        var coreR = Math.min(W, H) * 0.15;
         var coreGrad = gctx.createRadialGradient(CX, CY, 0, CX, CY, coreR);
-        coreGrad.addColorStop(0, 'rgba(255, 240, 210, 0.55)');
-        coreGrad.addColorStop(0.15, 'rgba(255, 220, 240, 0.35)');
-        coreGrad.addColorStop(0.4, 'rgba(180, 140, 255, 0.18)');
-        coreGrad.addColorStop(0.7, 'rgba(100, 60, 180, 0.08)');
+        coreGrad.addColorStop(0, 'rgba(255, 250, 240, 0.95)');
+        coreGrad.addColorStop(0.1, 'rgba(255, 240, 250, 0.75)');
+        coreGrad.addColorStop(0.3, 'rgba(255, 200, 240, 0.4)');
+        coreGrad.addColorStop(0.6, 'rgba(180, 140, 255, 0.15)');
         coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         gctx.fillStyle = coreGrad;
         gctx.fillRect(0, 0, W, H);
 
-        // Туманности
-        var n1 = gctx.createRadialGradient(CX - W*0.25, CY + H*0.05, 0, CX - W*0.25, CY + H*0.05, W*0.35);
-        n1.addColorStop(0, 'rgba(60, 120, 220, 0.22)');
-        n1.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        gctx.fillStyle = n1;
-        gctx.fillRect(0, 0, W, H);
-
-        var n2 = gctx.createRadialGradient(CX + W*0.15, CY + H*0.15, 0, CX + W*0.15, CY + H*0.15, W*0.35);
-        n2.addColorStop(0, 'rgba(220, 80, 180, 0.2)');
-        n2.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        gctx.fillStyle = n2;
-        gctx.fillRect(0, 0, W, H);
-
-        var n3 = gctx.createRadialGradient(CX + W*0.02, CY + H*0.28, 0, CX + W*0.02, CY + H*0.28, W*0.3);
-        n3.addColorStop(0, 'rgba(60, 200, 210, 0.15)');
-        n3.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        gctx.fillStyle = n3;
-        gctx.fillRect(0, 0, W, H);
-
-        // Внутреннее свечение
-        var innerGlowR = Math.min(W, H) * 0.6;
-        var innerGlow = gctx.createRadialGradient(CX, CY, 0, CX, CY, innerGlowR);
-        innerGlow.addColorStop(0, 'rgba(255, 200, 255, 0.15)');
-        innerGlow.addColorStop(0.5, 'rgba(150, 100, 220, 0.06)');
-        innerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        gctx.fillStyle = innerGlow;
-        gctx.fillRect(0, 0, W, H);
-
-        // Звёзды
+        // ===== ЗВЁЗДЫ =====
         gctx.globalCompositeOperation = 'lighter';
 
         for (var i = 0; i < stars.length; i++) {
@@ -161,8 +133,8 @@
             var py = CY + Math.sin(s.angle) * s.radius;
             if (px < -50 || px > W + 50 || py < -50 || py > H + 50) continue;
 
-            if (s.size > 1) {
-                gctx.shadowBlur = isMobile ? 8 : 12;
+            if (s.size > 0.8) {
+                gctx.shadowBlur = isMobile ? 6 : 9;
                 gctx.shadowColor = s.color;
             } else {
                 gctx.shadowBlur = 0;
