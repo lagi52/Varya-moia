@@ -187,7 +187,7 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ (НА ВЕСЬ ЭКРАН) ============
+// ============ СТИРАНИЕ (ЛЕГКОЕ) ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
@@ -221,10 +221,11 @@ var TELEGRAM_CHAT_ID = '5262922399';
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
+    // Радиус стирания 120px — стирается очень легко
     function scratch(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x, y, 55, 0, Math.PI * 2);
+        ctx.arc(x, y, 120, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -232,16 +233,18 @@ var TELEGRAM_CHAT_ID = '5262922399';
         if (revealedMax) return;
         var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
         var total = 0, clear = 0;
-        for (var i = 3; i < img.data.length; i += 40) {
+        for (var i = 3; i < img.data.length; i += 100) {
             total++;
             if (img.data[i] === 0) clear++;
         }
-        if (clear / total > 0.45) {
+        // Всего 20% — и слой исчезает
+        if (clear / total > 0.2) {
             revealedMax = true;
             canvas.style.transition = 'opacity 1.2s ease';
             canvas.style.opacity = '0';
             setTimeout(function(){
                 canvas.style.display = 'none';
+                placeBunnyRandomly();
                 document.getElementById('bunny').classList.add('visible');
                 document.getElementById('bunnyText').classList.add('visible');
                 document.getElementById('scratchHint').style.display = 'none';
@@ -260,6 +263,20 @@ var TELEGRAM_CHAT_ID = '5262922399';
     window.addEventListener('resize', resize);
     resize();
 })();
+
+// ============ ЗАЙЧИК В СЛУЧАЙНОМ МЕСТЕ ============
+function placeBunnyRandomly() {
+    var bunny = document.getElementById('bunny');
+    var text = document.getElementById('bunnyText');
+    var minX = 20, maxX = 80;
+    var minY = 25, maxY = 75;
+    var x = minX + Math.random() * (maxX - minX);
+    var y = minY + Math.random() * (maxY - minY);
+    bunny.style.left = x + '%';
+    bunny.style.top = y + '%';
+    text.style.left = x + '%';
+    text.style.top = (y + 13) + '%';
+}
 
 // ============ ЗАЙЧИК + ДИАФРАГМА ============
 document.getElementById('bunny').addEventListener('click', function(e){
