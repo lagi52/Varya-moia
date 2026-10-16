@@ -231,4 +231,230 @@ placeBunnyRandomly();
         grad.addColorStop(1, '#1a0818');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (var i = 0;
+        for (var i = 0; i < 800; i++) {
+            ctx.fillStyle = 'rgba(255, 200, 220, ' + (Math.random()*0.06) + ')';
+            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 1);
+        }
+    }
+
+    function getPos(e) {
+        var rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches[0]) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+    function scratchTo(x, y) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 150;
+
+        if (lastX === null) {
+            ctx.beginPath();
+            ctx.arc(x, y, 75, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+        lastX = x;
+        lastY = y;
+    }
+
+    function checkPercent() {
+        if (revealedMax) return;
+        try {
+            checkCtx.clearRect(0, 0, 100, 100);
+            checkCtx.drawImage(canvas, 0, 0, 100, 100);
+            var img = checkCtx.getImageData(0, 0, 100, 100);
+            var total = 100 * 100;
+            var clear = 0;
+            for (var i = 3; i < img.data.length; i += 4) {
+                if (img.data[i] < 50) clear++;
+            }
+            if (clear / total > 0.4) {
+                revealedMax = true;
+                if (hint) hint.classList.add('hide');
+                canvas.classList.add('fade-away');
+                setTimeout(function(){
+                    canvas.style.display = 'none';
+                }, 2000);
+            }
+        } catch(e) {}
+    }
+
+    canvas.addEventListener('mousedown', function(e){ scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
+    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
+    canvas.addEventListener('mouseup', function(){ scratching = false; lastX = null; lastY = null; });
+    canvas.addEventListener('mouseleave', function(){ scratching = false; lastX = null; lastY = null; });
+
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); }, { passive: false });
+    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); }, { passive: false });
+    canvas.addEventListener('touchend', function(){ scratching = false; lastX = null; lastY = null; });
+
+    window.addEventListener('resize', resize);
+    resize();
+})();
+
+// ============ КЛИК НА ЗАЙЧИКА ============
+document.getElementById('bunny').addEventListener('click', function(e){
+    e.stopPropagation();
+
+    var canvas = document.getElementById('scratchCanvas');
+    if (canvas && canvas.style.display !== 'none' && !canvas.classList.contains('fade-away')) {
+        return;
+    }
+
+    var bunny = document.getElementById('bunny');
+    var iris = document.getElementById('irisCircle');
+
+    var bunnyRect = bunny.getBoundingClientRect();
+    var bunnyX = bunnyRect.left + bunnyRect.width / 2;
+    var bunnyY = bunnyRect.top + bunnyRect.height / 2;
+    iris.style.left = bunnyX + 'px';
+    iris.style.top = bunnyY + 'px';
+
+    document.getElementById('scratchScreen').classList.add('fade-out');
+
+    setTimeout(function(){
+        iris.classList.remove('collapse');
+        iris.classList.add('expand');
+
+        setTimeout(function(){
+            document.getElementById('scratchScreen').classList.remove('active');
+            setTimeout(function(){
+                document.getElementById('scratchScreen').style.display = 'none';
+                var q1 = document.getElementById('q1');
+                q1.style.display = 'flex';
+                setTimeout(function(){ q1.classList.add('active'); }, 50);
+            }, 300);
+
+            iris.classList.remove('expand');
+            iris.classList.add('collapse');
+
+            setTimeout(function(){
+                iris.classList.remove('collapse');
+                iris.style.left = '50%';
+                iris.style.top = '50%';
+            }, 1400);
+        }, 1400);
+    }, 800);
+});
+
+// ============ ЭКРАНЫ ============
+function showScreen(id) {
+    var s = document.getElementById(id);
+    s.style.display = 'flex';
+    setTimeout(function(){ s.classList.add('active'); }, 50);
+}
+function hideScreen(id) {
+    var s = document.getElementById(id);
+    s.classList.remove('active');
+    setTimeout(function(){ s.style.display = 'none'; }, 800);
+}
+
+// ============ ОТВЕТЫ ============
+var answers = {};
+document.querySelectorAll('.options').forEach(function(opt){
+    var qid = opt.getAttribute('data-question');
+    answers[qid] = [];
+    var next = opt.parentElement.querySelector('.next-btn');
+    opt.querySelectorAll('.option-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            btn.classList.toggle('selected');
+            var a = btn.textContent.trim();
+            if (btn.classList.contains('selected')) {
+                if (answers[qid].indexOf(a) === -1) answers[qid].push(a);
+            } else {
+                answers[qid] = answers[qid].filter(function(x){ return x !== a; });
+            }
+            if (answers[qid].length > 0) next.classList.add('active');
+            else next.classList.remove('active');
+        });
+    });
+});
+
+// ============ НАВИГАЦИЯ ============
+document.getElementById('next1').addEventListener('click', function(){
+    hideScreen('q1');
+    setTimeout(function(){ showMessages('msg1', 'q2'); }, 800);
+});
+document.getElementById('next2').addEventListener('click', function(){
+    hideScreen('q2');
+    setTimeout(function(){ showMessages('msg2', 'q3'); }, 800);
+});
+document.getElementById('next3').addEventListener('click', function(){
+    hideScreen('q3');
+    setTimeout(function(){ showMessages('msg3', 'q4'); }, 800);
+});
+document.getElementById('next4').addEventListener('click', function(){
+    hideScreen('q4');
+    setTimeout(function(){ showFinale(); }, 800);
+});
+
+// ============ СООБЩЕНИЯ ============
+function showMessages(msgId, nextId) {
+    var screen = document.getElementById(msgId);
+    showScreen(msgId);
+    var msgs = screen.querySelectorAll('.message-text');
+    var panel = screen.querySelector('.glass-panel');
+    var oldArrow = panel.querySelector('.arrow-wrapper');
+    if (oldArrow) oldArrow.remove();
+    var wrap = document.createElement('div');
+    wrap.className = 'arrow-wrapper';
+    var arrow = document.createElement('span');
+    arrow.className = 'continue-arrow';
+    arrow.innerHTML = '→';
+    arrow.style.display = 'none';
+    wrap.appendChild(arrow);
+    panel.appendChild(wrap);
+    msgs.forEach(function(m, i){
+        setTimeout(function(){ m.classList.add('show'); }, i * 1800);
+    });
+    var total = msgs.length * 1800 + 1800;
+    setTimeout(function(){
+        arrow.style.display = 'inline-block';
+        arrow.onclick = function(){
+            hideScreen(msgId);
+            setTimeout(function(){ showScreen(nextId); }, 800);
+        };
+    }, total);
+}
+
+// ============ ФИНАЛ ============
+function showFinale() {
+    sendAnswersToTelegram();
+    var screen = document.getElementById('finale');
+    showScreen('finale');
+    var lines = screen.querySelectorAll('.finale-line');
+    lines.forEach(function(line, i){
+        setTimeout(function(){ line.classList.add('show'); }, i * 2000 + 500);
+    });
+}
+
+// ============ ОТПРАВКА В TELEGRAM ============
+function sendAnswersToTelegram() {
+    if (TELEGRAM_BOT_TOKEN === 'ВСТАВЬ_СЮДА_ТОКЕН') return;
+    var msg = '<b>🌌 Ответы Вари:</b>\n\n';
+    for (var key in answers) {
+        if (answers[key].length > 0) {
+            msg += '<b>' + key + ':</b> ' + answers[key].join(', ') + '\n';
+        }
+    }
+    msg += '\n<i>Время: ' + new Date().toLocaleString('ru-RU') + '</i>';
+
+    var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: msg,
+            parse_mode: 'HTML'
+        })
+    }).catch(function(){});
+}
+
+console.log('Сайт для Вари загружен 🌌');
