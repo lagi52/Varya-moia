@@ -187,7 +187,7 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ (ЛЕГКОЕ) ============
+// ============ СТИРАНИЕ ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
@@ -221,11 +221,11 @@ var TELEGRAM_CHAT_ID = '5262922399';
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    // Радиус стирания 120px — стирается очень легко
+    // Радиус стирания 75
     function scratch(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x, y, 120, 0, Math.PI * 2);
+        ctx.arc(x, y, 75, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -233,14 +233,15 @@ var TELEGRAM_CHAT_ID = '5262922399';
         if (revealedMax) return;
         var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
         var total = 0, clear = 0;
-        for (var i = 3; i < img.data.length; i += 100) {
+        // Проверяем каждый 150-й пиксель (быстро)
+        for (var i = 3; i < img.data.length; i += 150) {
             total++;
             if (img.data[i] === 0) clear++;
         }
-        // Всего 20% — и слой исчезает
-        if (clear / total > 0.2) {
+        // Порог 15% — слой исчезает очень быстро
+        if (clear / total > 0.15) {
             revealedMax = true;
-            canvas.style.transition = 'opacity 1.2s ease';
+            canvas.style.transition = 'opacity 1s ease';
             canvas.style.opacity = '0';
             setTimeout(function(){
                 canvas.style.display = 'none';
@@ -248,7 +249,7 @@ var TELEGRAM_CHAT_ID = '5262922399';
                 document.getElementById('bunny').classList.add('visible');
                 document.getElementById('bunnyText').classList.add('visible');
                 document.getElementById('scratchHint').style.display = 'none';
-            }, 1200);
+            }, 1000);
         }
     }
 
@@ -256,7 +257,7 @@ var TELEGRAM_CHAT_ID = '5262922399';
     canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); checkRevealed(); });
     canvas.addEventListener('mouseup', function(){ scratching = false; });
     canvas.addEventListener('mouseleave', function(){ scratching = false; });
-    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; var p = getPos(e); scratch(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; var p = getPos(e); scratch(p.x, p.y); checkRevealed(); }, { passive: false });
     canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); checkRevealed(); }, { passive: false });
     canvas.addEventListener('touchend', function(){ scratching = false; });
 
@@ -268,14 +269,16 @@ var TELEGRAM_CHAT_ID = '5262922399';
 function placeBunnyRandomly() {
     var bunny = document.getElementById('bunny');
     var text = document.getElementById('bunnyText');
-    var minX = 20, maxX = 80;
-    var minY = 25, maxY = 75;
+    // Случайное место в центре экрана (без крайностей)
+    var minX = 25, maxX = 75;
+    var minY = 30, maxY = 70;
     var x = minX + Math.random() * (maxX - minX);
     var y = minY + Math.random() * (maxY - minY);
     bunny.style.left = x + '%';
     bunny.style.top = y + '%';
+    // Надпись прямо под зайчиком
     text.style.left = x + '%';
-    text.style.top = (y + 13) + '%';
+    text.style.top = (y + 15) + '%';
 }
 
 // ============ ЗАЙЧИК + ДИАФРАГМА ============
