@@ -1,5 +1,5 @@
 // ===== НАСТРОЙКИ TELEGRAM =====
-var TELEGRAM_BOT_TOKEN = '8830323702:AAG6wQxE9mqwJzPJ63GeFb02yHHbYBCfVZ1Y';
+var TELEGRAM_BOT_TOKEN = '8830323702:AAG6wQxE9mqqWzJP63GeFbO2yHHyBCfVZ1Y';
 var TELEGRAM_CHAT_ID = '5262922399';
 
 // ============ ГАЛАКТИКА ============
@@ -270,7 +270,7 @@ placeBunnyRandomly();
     function checkAroundBunny() {
         if (revealedMax) return;
         try {
-            var r = BUNNY_RADIUS + 40; // проверяем область вокруг кролика с запасом
+            var r = BUNNY_RADIUS + 40;
             var scaleX = canvas.width / window.innerWidth;
             var scaleY = canvas.height / window.innerHeight;
             var sx = (BUNNY_PX_X - r) * scaleX;
@@ -290,7 +290,6 @@ placeBunnyRandomly();
             for (var i = 3; i < img.data.length; i += 4) {
                 if (img.data[i] < 50) clear++;
             }
-            // Порог 65% — надо стереть большую часть вокруг кролика
             if (clear / total > 0.65) {
                 revealedMax = true;
                 if (hint) hint.classList.add('hide');
@@ -373,53 +372,205 @@ function hideScreen(id) {
     setTimeout(function(){ s.style.display = 'none'; }, 800);
 }
 
+// ============ ВЫБОР СЛУЧАЙНОГО ============
+function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ============ БАЗА СООБЩЕНИЙ ============
+// Q1 — «Какая ты, когда никто не видит?»
+var messagesQ1 = {
+    '🥺 Ранимая': [
+        'Я это запомню. И буду с тобой аккуратен.',
+        'Твоя ранимость — не слабость. Это то, что делает тебя настоящей.',
+        'Спасибо, что показала это. Я не подведу.'
+    ],
+    '😈 Дерзкая': [
+        'Ха, люблю эту сторону. Пусть она тоже будет со мной.',
+        'Дерзкая Варя — это отдельный вид искусства.',
+        'С такой не соскучишься. И я не хочу скучать.'
+    ],
+    '🌸 Нежная': [
+        'Это твоя суть. Не прячь её от меня.',
+        'Ты нежная. И это редкий, ценный дар.',
+        'В твоей нежности столько силы. Я это вижу.'
+    ],
+    '🖤 Настоящая': [
+        'Вот эту тебя я и хочу знать.',
+        'Настоящая — самая красивая версия тебя.',
+        'Без масок. Спасибо, что такая.'
+    ],
+    '✨ Мечтательная': [
+        'Расскажи мне, о чём ты мечтаешь.',
+        'Мечтательные люди — это те, кто меняет мир.',
+        'Твои мечты. Я хочу их знать.'
+    ],
+    '😂 Смешная': [
+        'Смех — лучшее, что в тебе есть. И это о многом.',
+        'С тобой весело даже в тишине. Это дар.',
+        'Люблю, когда ты смеёшься. Это мой любимый звук.'
+    ]
+};
+
+// Q2 — «Что ты делаешь, когда тебе хорошо?»
+var messagesQ2 = {
+    '😴 Сплю': [
+        'Сон — это святое. Пусть снятся только тёплые сны.',
+        'Спи, моя хорошая. Пусть утро будет добрым.',
+        'Пусть сны будут такими же красивыми, как ты.'
+    ],
+    '🛋 Лежу': [
+        'Тоже умеешь просто быть. Это редкий талант.',
+        'Иногда просто лежать — это тоже отдых для души.',
+        'Люблю, когда ты никуда не спешишь.'
+    ],
+    '🎮 Играю': [
+        'Люблю, когда у тебя горят глаза. Даже от игры.',
+        'Азартная Варя — интересно посмотреть.',
+        'Пусть побеждаешь. Хотя ты и так победитель.'
+    ],
+    '🍷 Бухаю': [
+        'Ха, значит весёлая ты. Хочу увидеть это настроение.',
+        'Осторожнее там. Но веселись от души.',
+        'Пьяная Варя — это отдельный жанр. Уверен, крутой.'
+    ],
+    '🎵 Слушаю музыку': [
+        'Интересно, что играет у тебя в наушниках сейчас...',
+        'Музыка — это язык, который ты понимаешь. И я хочу его учить.',
+        'Поделишься плейлистом? Хочу знать, что тебя трогает.'
+    ],
+    '🍕 Кушаю': [
+        'Вкусная еда — маленькое счастье. Ты его заслуживаешь.',
+        'Приятного аппетита, моя хорошая.',
+        'Надеюсь, вкусно. Ты заслуживаешь вкусного.'
+    ],
+    '🚶 Гуляю': [
+        'Люблю представлять тебя на улице, куда-то идущую...',
+        'Прогулки — это твоё. Пусть погода будет тёплой.',
+        'Гуляй. Дыши. Наслаждайся. Ты этого достойна.'
+    ],
+    '🎨 Рисую': [
+        'Ты творишь. Это красиво, даже если ты сама не замечаешь.',
+        'Твои рисунки — часть тебя. Хочу однажды увидеть.',
+        'Творчество — это твоя суперсила. Не бросай.'
+    ],
+    '💪 Тренируюсь': [
+        'Сильная и красивая. Сочетание, от которого я в восторге.',
+        'Ты вкладываешь в себя. Это уважение.',
+        'Каждая тренировка — это победа. Я это вижу.'
+    ],
+    '🤗 Обнимаюсь': [
+        'Обнимашки — язык, который я понимаю без слов.',
+        'Если бы я был рядом — обнял бы тебя сейчас.',
+        'Обнимать тебя — это то, что я хочу делать каждый день.'
+    ]
+};
+
+// Q3 — «Как ты понимаешь, что человек — твой?»
+var messagesQ3 = {
+    '👀 По взгляду': [
+        'Взгляд не соврёт. Я хочу, чтобы мой был для тебя тёплым.',
+        'По глазам можно многое понять. Это дар — видеть.',
+        'Значит, ты чувствуешь глубже, чем многие. Это редкость.'
+    ],
+    '🌙 По молчанию': [
+        'Молчание рядом — это высшая форма близости.',
+        'Уметь молчать вместе — это тоже умение. Ты умеешь.',
+        'Тишина с тобой — уже разговор.'
+    ],
+    '🤍 По заботе': [
+        'Значит, ты чувствуешь, когда кто-то нужен. Это ценное.',
+        'Забота — это язык любви. И ты его знаешь.',
+        'Я хочу быть тем, о ком ты тоже будешь заботиться.'
+    ],
+    '😂 По смеху': [
+        'Смех — это искра. Если она есть — всё настоящее.',
+        'Когда смеёшься вместе — это уже своё.',
+        'Хороший признак. Смех не соврёт.'
+    ],
+    '🛡 По надёжности': [
+        'Надёжность — это редкость. Уважаю, что ты её чувствуешь.',
+        'Значит, тебе важно, чтобы человек был опорой. Я это понимаю.',
+        'Хочу быть для тебя тем, на кого можно опереться.'
+    ],
+    '🔥 По искре': [
+        'Искра — это то, что не объяснишь. И её не подделать.',
+        'Значит, ты веришь в химию. И правильно.',
+        'Между нами есть эта искра. Я это чувствую.'
+    ]
+};
+
+// Q4 — «Что бы ты хотела, чтобы я знал о тебе?»
+var messagesQ4 = {
+    '😴 Что я устаю': [
+        'Хочу быть тем, с кем ты можешь просто выдохнуть.',
+        'Усталость — не слабость. Отдыхай, когда нужно.',
+        'Если когда-нибудь захочешь — я рядом. Просто быть рядом.'
+    ],
+    '🌧 Что я грущу': [
+        'Грусть — это часть тебя. Не прячь её.',
+        'Хочу, чтобы в грустные моменты ты знала — я есть.',
+        'Если будет плохо — ты не одна. Запомни это.'
+    ],
+    '🌸 Что я нежная': [
+        'Твоя нежность — моё любимое в тебе.',
+        'Нежная Варя — это то, что я хочу беречь.',
+        'Спасибо, что такая. Не теряй это.'
+    ],
+    '⚔ Что я сильная': [
+        'Сила в тебе — это то, что восхищает.',
+        'Ты справишься со всем. Я это знаю.',
+        'Сильная — но не значит одинокая. Я рядом.'
+    ],
+    '🤍 Что я нуждаюсь в тебе': [
+        'Значит, ты тоже умеешь просить. Это смелость.',
+        'Я хочу быть нужным тебе. Правда.',
+        'Это честно. И это ценно. Спасибо.'
+    ],
+    '🖤 Что я боюсь': [
+        'Страхи есть у всех. Ты не одна в них.',
+        'Спасибо, что доверила это. Я аккуратно.',
+        'С тобой — мне тоже иногда страшно. Но я хочу идти вперёд.'
+    ]
+};
+
+// Финальные подписи (для самого конца)
+var finaleSignatures = [
+    'Я тебя ценю. Правда.',
+    'Люблю тебя. И буду рядом.',
+    'Спасибо, что ты есть. Каждый день.',
+    'Ты — моё. И это моё любимое.',
+    'Ты стала моим favourite человеком.'
+];
+
+// Персональная строка финала (зависит от выбора в Q4)
+var finalePersonalMap = {
+    '🌸 Что я нежная': 'Ты нежная. И это то, что я особенно ценю.',
+    '🤍 Что я нуждаюсь в тебе': 'Ты можешь на меня положиться. Всегда.',
+    '🖤 Что я боюсь': 'Твои страхи — наши страхи. Я рядом.',
+    '⚔ Что я сильная': 'Твоя сила вдохновляет. И я хочу быть рядом.',
+    '😴 Что я устаю': 'Отдыхай со мной. Я хочу быть твоим покоем.',
+    '🌧 Что я грущу': 'Твоя грусть — не одна. Я буду рядом.'
+};
+
 // ============ СТРЕЛКА ============
-function addArrow(panel, callback) {
+function addArrowToPanel(panel, callback) {
     var old = panel.querySelector('.continue-arrow');
     if (old) old.remove();
     var arrow = document.createElement('span');
     arrow.className = 'continue-arrow';
     arrow.innerHTML = '→';
     panel.appendChild(arrow);
-    // Показать через небольшую задержку
     setTimeout(function(){ arrow.classList.add('show'); }, 300);
-    arrow.onclick = function(){
-        if (callback) callback();
-    };
-    return arrow;
+    arrow.onclick = callback;
 }
 
 // ============ ОТВЕТЫ ============
 var answers = {};
 
-// Индивидуальные сообщения
-var msg1Map = {
-    '🥺 Ранимая': 'Я это запомню. И буду с тобой аккуратен.',
-    '😈 Дерзкая': 'Ха, люблю эту сторону. Пусть она тоже будет со мной.',
-    '🌸 Нежная': 'Это твоя суть. Не прячь её от меня.',
-    '🖤 Настоящая': 'Вот эту тебя я и хочу знать.',
-    '✨ Мечтательная': 'Расскажи мне, о чём ты мечтаешь.',
-    '😂 Смешная': 'Смех — лучшее, что в тебе есть. И это о многом.'
-};
-
-var msg2Map = {
-    '😴 Сплю': 'Сон — это святое. Пусть снятся только тёплые сны.',
-    '🛋 Лежу': 'Тоже умеешь просто быть. Это редкий талант.',
-    '🎮 Играю': 'Люблю, когда у тебя горят глаза. Даже от игры.',
-    '🍷 Бухаю': 'Ха, значит весёлая ты. Хочу увидеть это настроение.',
-    '🎵 Слушаю музыку': 'Интересно, что играет у тебя в наушниках сейчас...',
-    '🍕 Кушаю': 'Вкусная еда — маленькое счастье. Ты его заслуживаешь.',
-    '🚶 Гуляю': 'Люблю представлять тебя на улице, куда-то идущую...',
-    '🎨 Рисую': 'Ты творишь. Это красиво, даже если ты сама не замечаешь.',
-    '💪 Тренируюсь': 'Сильная и красивая. Сочетание, от которого я в восторге.',
-    '🤗 Обнимаюсь': 'Обнимашки — язык, который я понимаю без слов.'
-};
-
 document.querySelectorAll('.options').forEach(function(opt){
     var qid = opt.getAttribute('data-question');
     answers[qid] = [];
-    var panel = opt.parentElement;
-
     opt.querySelectorAll('.option-btn').forEach(function(btn){
         btn.addEventListener('click', function(){
             btn.classList.toggle('selected');
@@ -429,23 +580,17 @@ document.querySelectorAll('.options').forEach(function(opt){
             } else {
                 answers[qid] = answers[qid].filter(function(x){ return x !== a; });
             }
-            // Показать/скрыть стрелку
-            var arrow = panel.querySelector('.continue-arrow');
-            if (answers[qid].length > 0) {
-                if (!arrow) {
-                    // Стрелка появится через обработчик вопроса
-                }
-            }
         });
     });
 });
 
-// ============ НАВИГАЦИЯ ============
-function bindQuestion(qId, nextAction) {
+// ============ НАВИГАЦИЯ ВОПРОСОВ ============
+function bindQuestion(qId, qKey, nextAction) {
     var q = document.getElementById(qId);
     var panel = q.querySelector('.glass-panel');
     var options = q.querySelector('.options');
     var qid = options.getAttribute('data-question');
+
     var arrow = document.createElement('span');
     arrow.className = 'continue-arrow';
     arrow.innerHTML = '→';
@@ -471,45 +616,50 @@ function bindQuestion(qId, nextAction) {
     };
 }
 
-bindQuestion('q1', function(){
+bindQuestion('q1', null, function(){
     hideScreen('q1');
-    setTimeout(function(){ showMsg1(); }, 700);
+    setTimeout(function(){ showMessageScreen('msg1', 'msg1Content', answers['Настоящая'], messagesQ1, 'q2'); }, 700);
 });
-bindQuestion('q2', function(){
+bindQuestion('q2', null, function(){
     hideScreen('q2');
-    setTimeout(function(){ showMsg2(); }, 700);
+    setTimeout(function(){ showMessageScreen('msg2', 'msg2Content', answers['Хорошо'], messagesQ2, 'q3'); }, 700);
 });
-bindQuestion('q3', function(){
+bindQuestion('q3', null, function(){
     hideScreen('q3');
-    setTimeout(function(){ showMsg3(); }, 700);
+    setTimeout(function(){ showMessageScreen('msg3', 'msg3Content', answers['Свой'], messagesQ3, 'q4'); }, 700);
 });
-bindQuestion('q4', function(){
+bindQuestion('q4', null, function(){
     hideScreen('q4');
-    setTimeout(function(){ showFinale(); }, 700);
+    setTimeout(function(){ showMessageScreen('msg4', 'msg4Content', answers['О тебе'], messagesQ4, 'finale'); }, 700);
 });
 
-// ============ СООБЩЕНИЕ 1 ============
-function showMsg1() {
-    var screen = document.getElementById('msg1');
-    var container = document.getElementById('msg1Content');
+// ============ ПОКАЗ СООБЩЕНИЙ ============
+function showMessageScreen(screenId, contentId, selectedAnswers, messageMap, nextId) {
+    var screen = document.getElementById(screenId);
+    var container = document.getElementById(contentId);
     container.innerHTML = '';
-    var list = answers['Настоящая'] || [];
-    // Показываем по очереди
+
     var delay = 0;
-    list.forEach(function(ans){
-        if (msg1Map[ans]) {
+    selectedAnswers.forEach(function(ans){
+        if (messageMap[ans]) {
+            var phrase = pickRandom(messageMap[ans]);
             var p = document.createElement('p');
             p.className = 'message-text';
-            p.textContent = msg1Map[ans];
+            p.textContent = phrase;
             container.appendChild(p);
-            setTimeout(function(){ p.classList.add('show'); }, delay);
+            (function(el, d){
+                setTimeout(function(){ el.classList.add('show'); }, d);
+            })(p, delay);
             delay += 1700;
         }
     });
-    showScreen('msg1');
+
+    showScreen(screenId);
+
     var panel = screen.querySelector('.glass-panel');
     var old = panel.querySelector('.continue-arrow');
     if (old) old.remove();
+
     setTimeout(function(){
         var arrow = document.createElement('span');
         arrow.className = 'continue-arrow';
@@ -517,80 +667,45 @@ function showMsg1() {
         panel.appendChild(arrow);
         setTimeout(function(){ arrow.classList.add('show'); }, 300);
         arrow.onclick = function(){
-            hideScreen('msg1');
-            setTimeout(function(){ showScreen('q2'); }, 700);
+            hideScreen(screenId);
+            setTimeout(function(){
+                if (nextId === 'finale') {
+                    showFinale();
+                } else {
+                    showScreen(nextId);
+                }
+            }, 700);
         };
     }, delay + 800);
-}
-
-// ============ СООБЩЕНИЕ 2 ============
-function showMsg2() {
-    var screen = document.getElementById('msg2');
-    var container = document.getElementById('msg2Content');
-    container.innerHTML = '';
-    var list = answers['Хорошо'] || [];
-    var delay = 0;
-    list.forEach(function(ans){
-        if (msg2Map[ans]) {
-            var p = document.createElement('p');
-            p.className = 'message-text';
-            p.textContent = msg2Map[ans];
-            container.appendChild(p);
-            setTimeout(function(){ p.classList.add('show'); }, delay);
-            delay += 1700;
-        }
-    });
-    showScreen('msg2');
-    var panel = screen.querySelector('.glass-panel');
-    var old = panel.querySelector('.continue-arrow');
-    if (old) old.remove();
-    setTimeout(function(){
-        var arrow = document.createElement('span');
-        arrow.className = 'continue-arrow';
-        arrow.innerHTML = '→';
-        panel.appendChild(arrow);
-        setTimeout(function(){ arrow.classList.add('show'); }, 300);
-        arrow.onclick = function(){
-            hideScreen('msg2');
-            setTimeout(function(){ showScreen('q3'); }, 700);
-        };
-    }, delay + 800);
-}
-
-// ============ СООБЩЕНИЕ 3 ============
-function showMsg3() {
-    var screen = document.getElementById('msg3');
-    showScreen('msg3');
-    var msgs = screen.querySelectorAll('.message-text');
-    msgs.forEach(function(m){ m.classList.remove('show'); });
-    msgs.forEach(function(m, i){
-        setTimeout(function(){ m.classList.add('show'); }, i * 1800);
-    });
-    var panel = screen.querySelector('.glass-panel');
-    var old = panel.querySelector('.continue-arrow');
-    if (old) old.remove();
-    setTimeout(function(){
-        var arrow = document.createElement('span');
-        arrow.className = 'continue-arrow';
-        arrow.innerHTML = '→';
-        panel.appendChild(arrow);
-        setTimeout(function(){ arrow.classList.add('show'); }, 300);
-        arrow.onclick = function(){
-            hideScreen('msg3');
-            setTimeout(function(){ showScreen('q4'); }, 700);
-        };
-    }, msgs.length * 1800 + 800);
 }
 
 // ============ ФИНАЛ ============
 function showFinale() {
     sendAnswersToTelegram();
+
     var screen = document.getElementById('finale');
     showScreen('finale');
+
+    // Персональная строка
+    var personalText = '';
+    var selectedQ4 = answers['О тебе'] || [];
+    for (var i = 0; i < selectedQ4.length; i++) {
+        if (finalePersonalMap[selectedQ4[i]]) {
+            personalText = finalePersonalMap[selectedQ4[i]];
+            break;
+        }
+    }
+    if (!personalText) {
+        personalText = 'Ты — та, ради кого я хочу становиться лучше.';
+    }
+    document.getElementById('finalePersonal').textContent = personalText;
+    document.getElementById('finaleSignature').textContent = pickRandom(finaleSignatures);
+
+    // Анимация появления
     var lines = screen.querySelectorAll('.finale-line');
-    lines.forEach(function(line){ line.classList.remove('show'); });
+    lines.forEach(function(l){ l.classList.remove('show'); });
     lines.forEach(function(line, i){
-        setTimeout(function(){ line.classList.add('show'); }, i * 2000 + 500);
+        setTimeout(function(){ line.classList.add('show'); }, i * 1800 + 400);
     });
 }
 
