@@ -187,7 +187,9 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ ЗАЙЧИК ============
+// ============ КРОЛИК — В СЛУЧАЙНОМ МЕСТЕ ============
+var BUNNY_X = 0, BUNNY_Y = 0;
+
 function placeBunnyRandomly() {
     var bunny = document.getElementById('bunny');
     var text = document.getElementById('bunnyText');
@@ -198,7 +200,9 @@ function placeBunnyRandomly() {
     bunny.style.left = x + '%';
     bunny.style.top = y + '%';
     text.style.left = x + '%';
-    text.style.top = (y + 13) + '%';
+    text.style.top = (y + 10) + '%';
+    BUNNY_X = x / 100 * window.innerWidth;
+    BUNNY_Y = y / 100 * window.innerHeight;
 }
 placeBunnyRandomly();
 
@@ -212,6 +216,7 @@ placeBunnyRandomly();
     var lastX = null, lastY = null;
     var hint = document.getElementById('scratchHint');
 
+    // Маленький offscreen для быстрой проверки стирания вокруг кролика
     var checkCanvas = document.createElement('canvas');
     checkCanvas.width = 100;
     checkCanvas.height = 100;
@@ -243,15 +248,16 @@ placeBunnyRandomly();
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
+    // Радиус стирания 45
     function scratchTo(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 150;
+        ctx.lineWidth = 90;
 
         if (lastX === null) {
             ctx.beginPath();
-            ctx.arc(x, y, 75, 0, Math.PI * 2);
+            ctx.arc(x, y, 45, 0, Math.PI * 2);
             ctx.fill();
         } else {
             ctx.beginPath();
@@ -263,18 +269,42 @@ placeBunnyRandomly();
         lastY = y;
     }
 
-    function checkPercent() {
+    // Проверяем — сколько стёрто ВОКРУГ КРОЛИКА
+    function checkAroundBunny() {
         if (revealedMax) return;
         try {
-            checkCtx.clearRect(0, 0, 100, 100);
-            checkCtx.drawImage(canvas, 0, 0, 100, 100);
-            var img = checkCtx.getImageData(0, 0, 100, 100);
-            var total = 100 * 100;
+            // Размер кролика в процентах экрана (примерно 80px)
+            var bunnyRadiusPx = 70;
+            var bunnySizePercentX = (bunnyRadiusPx * 2) / window.innerWidth * 100;
+            var bunnySizePercentY = (bunnyRadiusPx * 2) / window.innerHeight * 100;
+            // Область вокруг кролика
+            var sx = BUNNY_X / window.innerWidth * 100 - bunnySizePercentX / 2;
+            var sy = BUNNY_Y / window.innerHeight * 100 - bunnySizePercentY / 2;
+            var sw = bunnySizePercentX;
+            var sh = bunnySizePercentY;
+            if (sx < 0) sx = 0;
+            if (sy < 0) sy = 0;
+            if (sw > 100) sw = 100;
+            if (sh > 100) sh = 100;
+
+            // Считываем область вокруг кролика в маленький канвас
+            var checkW = 40, checkH = 40;
+            checkCtx.clearRect(0, 0, checkW, checkH);
+            checkCtx.drawImage(canvas,
+                (BUNNY_X - bunnyRadiusPx) * (canvas.width / window.innerWidth),
+                (BUNNY_Y - bunnyRadiusPx) * (canvas.height / window.innerHeight),
+                bunnyRadiusPx * 2 * (canvas.width / window.innerWidth),
+                bunnyRadiusPx * 2 * (canvas.height / window.innerHeight),
+                0, 0, checkW, checkH);
+
+            var img = checkCtx.getImageData(0, 0, checkW, checkH);
+            var total = checkW * checkH;
             var clear = 0;
             for (var i = 3; i < img.data.length; i += 4) {
                 if (img.data[i] < 50) clear++;
             }
-            if (clear / total > 0.4) {
+            // Если стёрто 35% вокруг кролика — пора!
+            if (clear / total > 0.35) {
                 revealedMax = true;
                 if (hint) hint.classList.add('hide');
                 canvas.classList.add('fade-away');
@@ -285,23 +315,25 @@ placeBunnyRandomly();
         } catch(e) {}
     }
 
-    canvas.addEventListener('mousedown', function(e){ scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
-    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
+    canvas.addEventListener('mousedown', function(e){ scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkAroundBunny(); });
+    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkAroundBunny(); });
     canvas.addEventListener('mouseup', function(){ scratching = false; lastX = null; lastY = null; });
     canvas.addEventListener('mouseleave', function(){ scratching = false; lastX = null; lastY = null; });
 
-    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); }, { passive: false });
-    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); }, { passive: false });
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkAroundBunny(); }, { passive: false });
+    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkAroundBunny(); }, { passive: false });
     canvas.addEventListener('touchend', function(){ scratching = false; lastX = null; lastY = null; });
 
     window.addEventListener('resize', resize);
     resize();
 })();
 
-// ============ КЛИК НА ЗАЙЧИКА ============
+// ============ КЛИК НА КРОЛИКА ============
 document.getElementById('bunny').addEventListener('click', function(e){
     e.stopPropagation();
+    e.preventDefault();
 
+    // Если канвас ещё не растворился — не даём кликать
     var canvas = document.getElementById('scratchCanvas');
     if (canvas && canvas.style.display !== 'none' && !canvas.classList.contains('fade-away')) {
         return;
