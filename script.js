@@ -187,19 +187,17 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ ============
+// ============ СТИРАНИЕ (НА ВЕСЬ ЭКРАН) ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
-    var wrap = canvas.parentElement;
     var ctx = canvas.getContext('2d');
     var scratching = false;
     var revealedMax = false;
 
     function resize() {
-        var rect = wrap.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         drawCover();
     }
 
@@ -211,12 +209,12 @@ var TELEGRAM_CHAT_ID = '5262922399';
         grad.addColorStop(1, '#1a0818');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (var i = 0; i < 400; i++) {
+        for (var i = 0; i < 800; i++) {
             ctx.fillStyle = 'rgba(255, 200, 220, ' + (Math.random()*0.06) + ')';
             ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 1);
         }
-        ctx.fillStyle = 'rgba(255, 200, 220, 0.3)';
-        ctx.font = '300 15px Raleway, sans-serif';
+        ctx.fillStyle = 'rgba(255, 200, 220, 0.25)';
+        ctx.font = '300 16px Raleway, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('СОТРИ ПАЛЬЦЕМ', canvas.width/2, canvas.height/2);
     }
@@ -230,7 +228,7 @@ var TELEGRAM_CHAT_ID = '5262922399';
     function scratch(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x, y, 50, 0, Math.PI * 2);
+        ctx.arc(x, y, 55, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -259,11 +257,12 @@ var TELEGRAM_CHAT_ID = '5262922399';
     canvas.addEventListener('touchend', function(){ scratching = false; });
 
     window.addEventListener('resize', resize);
-    setTimeout(resize, 100);
+    resize();
 })();
 
 // ============ ЗАЙЧИК + ДИАФРАГМА ============
-document.getElementById('bunny').addEventListener('click', function(){
+document.getElementById('bunny').addEventListener('click', function(e){
+    e.stopPropagation();
     var iris = document.getElementById('irisCircle');
     iris.classList.remove('collapse');
     iris.classList.add('expand');
