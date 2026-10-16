@@ -1,4 +1,4 @@
-// ============ ГАЛАКТИКА НА CANVAS (ОПТИМИЗИРОВАННАЯ) ============
+// ============ ГАЛАКТИКА НА CANVAS (АДАПТИВНАЯ) ============
 (function(){
     var canvas = document.getElementById('galaxyCanvas');
     if (!canvas) return;
@@ -10,11 +10,10 @@
     var mouseX = 0, mouseY = 0;
     var targetX = 0, targetY = 0;
     var offsetX = 0, offsetY = 0;
-    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    // На телефоне — в 3 раза меньше звёзд
-    var NUM_STARS = isMobile ? 700 : 1800;
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 700;
+    var NUM_STARS = isMobile ? 900 : 1800;
     var lastFrame = 0;
-    var frameInterval = isMobile ? 1000/30 : 1000/60; // 30 fps на телефоне
+    var frameInterval = isMobile ? 1000/30 : 1000/60;
     var galaxyImg = null;
 
     function resize() {
@@ -23,8 +22,16 @@
         H = canvas.height = window.innerHeight * dpr;
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
-        CX = W * 0.78;
-        CY = H * 0.22;
+
+        // На телефоне — центр ближе и НЕ за краем
+        if (isMobile) {
+            CX = W * 0.65;
+            CY = H * 0.30;
+        } else {
+            CX = W * 0.78;
+            CY = H * 0.22;
+        }
+
         buildStars();
         renderStatic();
     }
@@ -33,8 +40,10 @@
         stars = [];
         var arms = 2;
         var armSpread = 0.55;
-        var innerR = 10;
-        var outerR = Math.min(W, H) * 0.75;
+        var innerR = 8;
+        // На телефоне галактика меньше по радиусу
+        var sizeBase = Math.min(W, H);
+        var outerR = isMobile ? sizeBase * 0.85 : sizeBase * 0.75;
 
         for (var i = 0; i < NUM_STARS; i++) {
             var t = Math.pow(Math.random(), 0.65);
@@ -52,21 +61,22 @@
 
             var r, g, b, alpha;
             if (t < 0.15) {
-                r = 255; g = 240; b = 220; alpha = 0.9;
+                r = 255; g = 240; b = 220; alpha = 0.95;
             } else if (t < 0.4) {
-                r = 220; g = 230; b = 255; alpha = 0.75;
+                r = 220; g = 230; b = 255; alpha = 0.85;
             } else if (t < 0.7) {
                 r = 150 + Math.random() * 80;
                 g = 180 + Math.random() * 60;
-                b = 255; alpha = 0.55;
+                b = 255; alpha = 0.7;
             } else {
                 r = 200 + Math.random() * 55;
                 g = 140 + Math.random() * 60;
-                b = 240; alpha = 0.35;
+                b = 240; alpha = 0.5;
             }
-            alpha *= 0.5 + Math.random() * 0.5;
-            var size = Math.random() * 1.2 + 0.3;
-            if (t < 0.15) size = Math.random() * 1.8 + 0.8;
+            alpha *= 0.6 + Math.random() * 0.4;
+            // На телефоне звёзды крупнее, чтобы их было видно
+            var size = Math.random() * (isMobile ? 1.8 : 1.2) + (isMobile ? 0.6 : 0.3);
+            if (t < 0.15) size = Math.random() * 2.2 + 1;
 
             stars.push({
                 x: x, y: y,
@@ -90,12 +100,10 @@
     }, true);
 
     function renderStatic() {
-        // Рисуем один раз в offscreen canvas
         galaxyImg = document.createElement('canvas');
         galaxyImg.width = W;
         galaxyImg.height = H;
         var gctx = galaxyImg.getContext('2d');
-
         gctx.globalCompositeOperation = 'lighter';
 
         for (var i = 0; i < stars.length; i++) {
@@ -104,7 +112,7 @@
             var py = CY + Math.sin(s.angle) * s.radius;
             if (px < -50 || px > W + 50 || py < -50 || py > H + 50) continue;
 
-            if (s.size > 1 && !isMobile) {
+            if (s.size > 1.2 && !isMobile) {
                 gctx.shadowBlur = 6;
                 gctx.shadowColor = s.color;
             } else {
@@ -121,8 +129,6 @@
 
     function draw(timestamp) {
         requestAnimationFrame(draw);
-
-        // Троттлинг на телефоне
         if (timestamp - lastFrame < frameInterval) return;
         lastFrame = timestamp;
 
@@ -156,7 +162,7 @@
 // ============ ПАРАЛЛАКС ============
 (function(){
     var layers = document.querySelectorAll('.nebula, .stars, .bright-stars');
-    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 700;
     var mouseX = 0, mouseY = 0;
     var targetX = 0, targetY = 0;
     document.addEventListener('mousemove', function(e){
@@ -189,7 +195,7 @@
 (function(){
     var container = document.getElementById('particles');
     if (!container) return;
-    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 700;
     var colors = [
         'rgba(150, 200, 255, ',
         'rgba(255, 180, 220, ',
@@ -211,7 +217,6 @@
         container.appendChild(p);
         setTimeout(function(){ p.remove(); }, 27000);
     }
-    // На телефоне — реже
     setInterval(createParticle, isMobile ? 2000 : 900);
     var initial = isMobile ? 2 : 5;
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 700);
