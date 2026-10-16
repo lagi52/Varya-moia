@@ -187,14 +187,20 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ (ПРАВИЛЬНАЯ ВЕРСИЯ) ============
+// ============ СТИРАНИЕ — БЫСТРОЕ, ЛИНИЯМИ ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
     var scratching = false;
     var revealedMax = false;
-    var checkInterval = null;
+    var lastX = null, lastY = null;
+
+    // Маленький offscreen для быстрой проверки
+    var checkCanvas = document.createElement('canvas');
+    checkCanvas.width = 100;
+    checkCanvas.height = 100;
+    var checkCtx = checkCanvas.getContext('2d');
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -218,42 +224,55 @@ var TELEGRAM_CHAT_ID = '5262922399';
 
     function getPos(e) {
         var rect = canvas.getBoundingClientRect();
-        if (e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        if (e.touches && e.touches[0]) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    // Радиус 75
-    function scratch(x, y) {
+    // Стираем ЛИНИЯМИ с lineWidth = 150
+    function scratchTo(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.arc(x, y, 75, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 150;
+
+        if (lastX === null) {
+            // Первая точка — рисуем точку
+            ctx.beginPath();
+            ctx.arc(x, y, 75, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Между точками — линия (нет разрывов при быстром движении)
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+        lastX = x;
+        lastY = y;
     }
 
-    // Проверка процента стёртого — через getImageData, но редко (раз в 250мс)
     function checkPercent() {
         if (revealedMax) return;
         try {
-            var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            var total = 0, clear = 0;
-            // Проверяем каждый 400-й пиксель — быстро и точно для процента
-            for (var i = 3; i < img.data.length; i += 400) {
-                total++;
-                if (img.data[i] === 0) clear++;
+            checkCtx.clearRect(0, 0, 100, 100);
+            checkCtx.drawImage(canvas, 0, 0, 100, 100);
+            var img = checkCtx.getImageData(0, 0, 100, 100);
+            var total = 100 * 100;
+            var clear = 0;
+            for (var i = 3; i < img.data.length; i += 4) {
+                if (img.data[i] < 50) clear++;
             }
-            var percent = clear / total;
-            if (percent > 0.5) {
+            if (clear / total > 0.5) {
                 revealedMax = true;
-                clearInterval(checkInterval);
                 revealBunny();
             }
         } catch(e) {}
     }
 
     function revealBunny() {
-        // Плавное исчезновение canvas
         canvas.classList.add('fade-away');
-        document.getElementById('scratchHint').style.opacity = '0';
+        var hint = document.getElementById('scratchHint');
+        if (hint) hint.style.opacity = '0';
 
         setTimeout(function(){
             canvas.style.display = 'none';
@@ -263,19 +282,17 @@ var TELEGRAM_CHAT_ID = '5262922399';
         }, 1800);
     }
 
-    canvas.addEventListener('mousedown', function(e){ scratching = true; var p = getPos(e); scratch(p.x, p.y); });
-    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); });
-    canvas.addEventListener('mouseup', function(){ scratching = false; });
-    canvas.addEventListener('mouseleave', function(){ scratching = false; });
-    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; var p = getPos(e); scratch(p.x, p.y); }, { passive: false });
-    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratch(p.x, p.y); }, { passive: false });
-    canvas.addEventListener('touchend', function(){ scratching = false; });
+    canvas.addEventListener('mousedown', function(e){ scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
+    canvas.addEventListener('mousemove', function(e){ if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
+    canvas.addEventListener('mouseup', function(){ scratching = false; lastX = null; lastY = null; });
+    canvas.addEventListener('mouseleave', function(){ scratching = false; lastX = null; lastY = null; });
+
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); }, { passive: false });
+    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if (!scratching) return; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); }, { passive: false });
+    canvas.addEventListener('touchend', function(){ scratching = false; lastX = null; lastY = null; });
 
     window.addEventListener('resize', resize);
     resize();
-
-    // Запускаем интервал проверки — раз в 250мс
-    checkInterval = setInterval(checkPercent, 250);
 })();
 
 // ============ ЗАЙЧИК В СЛУЧАЙНОМ МЕСТЕ ============
