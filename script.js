@@ -187,19 +187,18 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ — ПРОСТОЙ И БЫСТРЫЙ ВАРИАНТ ============
+// ============ СТИРАНИЕ (ПРАВИЛЬНАЯ ВЕРСИЯ) ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
     var scratching = false;
     var revealedMax = false;
-    var totalScratched = 0;
+    var checkInterval = null;
 
     function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        totalScratched = 0;
         drawCover();
     }
 
@@ -223,33 +222,45 @@ var TELEGRAM_CHAT_ID = '5262922399';
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    // Радиус маленький — 40
+    // Радиус 75
     function scratch(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x, y, 40, 0, Math.PI * 2);
+        ctx.arc(x, y, 75, 0, Math.PI * 2);
         ctx.fill();
-        // Считаем стёртое: примерная площадь одного мазка
-        totalScratched += Math.PI * 40 * 40;
-        checkRevealed();
     }
 
-    function checkRevealed() {
+    // Проверка процента стёртого — через getImageData, но редко (раз в 250мс)
+    function checkPercent() {
         if (revealedMax) return;
-        // Порог: стёрто ~12% экрана
-        var threshold = window.innerWidth * window.innerHeight * 0.12;
-        if (totalScratched > threshold) {
-            revealedMax = true;
-            canvas.style.transition = 'opacity 0.8s ease';
-            canvas.style.opacity = '0';
-            setTimeout(function(){
-                canvas.style.display = 'none';
-                placeBunnyRandomly();
-                document.getElementById('bunny').classList.add('visible');
-                document.getElementById('bunnyText').classList.add('visible');
-                document.getElementById('scratchHint').style.display = 'none';
-            }, 800);
-        }
+        try {
+            var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var total = 0, clear = 0;
+            // Проверяем каждый 400-й пиксель — быстро и точно для процента
+            for (var i = 3; i < img.data.length; i += 400) {
+                total++;
+                if (img.data[i] === 0) clear++;
+            }
+            var percent = clear / total;
+            if (percent > 0.5) {
+                revealedMax = true;
+                clearInterval(checkInterval);
+                revealBunny();
+            }
+        } catch(e) {}
+    }
+
+    function revealBunny() {
+        // Плавное исчезновение canvas
+        canvas.classList.add('fade-away');
+        document.getElementById('scratchHint').style.opacity = '0';
+
+        setTimeout(function(){
+            canvas.style.display = 'none';
+            placeBunnyRandomly();
+            document.getElementById('bunny').classList.add('visible');
+            document.getElementById('bunnyText').classList.add('visible');
+        }, 1800);
     }
 
     canvas.addEventListener('mousedown', function(e){ scratching = true; var p = getPos(e); scratch(p.x, p.y); });
@@ -262,6 +273,9 @@ var TELEGRAM_CHAT_ID = '5262922399';
 
     window.addEventListener('resize', resize);
     resize();
+
+    // Запускаем интервал проверки — раз в 250мс
+    checkInterval = setInterval(checkPercent, 250);
 })();
 
 // ============ ЗАЙЧИК В СЛУЧАЙНОМ МЕСТЕ ============
@@ -269,7 +283,7 @@ function placeBunnyRandomly() {
     var bunny = document.getElementById('bunny');
     var text = document.getElementById('bunnyText');
     var minX = 25, maxX = 75;
-    var minY = 30, maxY = 70;
+    var minY = 30, maxY = 65;
     var x = minX + Math.random() * (maxX - minX);
     var y = minY + Math.random() * (maxY - minY);
     bunny.style.left = x + '%';
