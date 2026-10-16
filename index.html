@@ -11,42 +11,148 @@
 </head>
 <body>
 
-    <!-- CANVAS ГАЛАКТИКА -->
     <canvas id="galaxyCanvas"></canvas>
 
-    <!-- ТУМАННОСТИ -->
     <div class="nebula nebula-blue"></div>
-    <div class="nebula nebula-pink"></div>
-    <div class="nebula nebula-teal"></div>
+    <div class="nebula nebula-red"></div>
+    <div class="nebula nebula-crimson"></div>
 
-    <!-- ЗВЁЗДЫ -->
     <div class="stars stars-far"></div>
     <div class="stars stars-mid"></div>
     <div class="stars stars-near"></div>
 
-    <!-- ЯРКИЕ ЗВЁЗДЫ -->
     <div class="bright-stars">
         <span class="bright-star" style="top:12%; left:22%; animation-delay:0s;"></span>
         <span class="bright-star bright-star-cyan" style="top:28%; left:78%; animation-delay:1.4s;"></span>
-        <span class="bright-star bright-star-pink" style="top:68%; left:15%; animation-delay:2.8s;"></span>
+        <span class="bright-star bright-star-red" style="top:68%; left:15%; animation-delay:2.8s;"></span>
         <span class="bright-star" style="top:82%; left:62%; animation-delay:4.2s;"></span>
-        <span class="bright-star bright-star-cyan" style="top:45%; left:88%; animation-delay:5.6s;"></span>
-        <span class="bright-star bright-star-pink" style="top:55%; left:42%; animation-delay:7s;"></span>
+        <span class="bright-star bright-star-red" style="top:45%; left:88%; animation-delay:5.6s;"></span>
+        <span class="bright-star bright-star-red" style="top:35%; left:55%; animation-delay:7s;"></span>
     </div>
 
-    <!-- КОМЕТЫ -->
     <div class="comet comet-1"></div>
     <div class="comet comet-2"></div>
 
-    <!-- СВЕТЯЩИЕСЯ ЧАСТИЦЫ -->
     <div class="particles" id="particles"></div>
 
-    <!-- ЦЕНТРАЛЬНЫЙ ТЕКСТ -->
-    <div class="intro">
-        <h1>Для Вари</h1>
-        <p>Скоро здесь будет кое-что тёплое...</p>
+    <div class="iris-circle" id="irisCircle"></div>
+
+    <!-- ЭКРАН 1: СТИРАНИЕ -->
+    <div class="screen active" id="scratchScreen">
+        <div class="scratch-wrap">
+            <div class="scratch-hidden" id="scratchHidden">
+                <div class="bunny" id="bunny">🐰</div>
+                <p class="bunny-text">Нажми на меня</p>
+            </div>
+            <canvas id="scratchCanvas"></canvas>
+            <div class="scratch-hint">Сотри, чтобы увидеть...</div>
+        </div>
+    </div>
+
+    <!-- ВОПРОС 1 -->
+    <div class="screen" id="q1">
+        <div class="glass-panel">
+            <h2>Если бы твоя душа была местом, где бы она жила?</h2>
+            <p class="hint">Можно выбрать несколько</p>
+            <div class="options" data-question="Душа">
+                <button class="option-btn">🌊 Ночное море</button>
+                <button class="option-btn">🌲 Старый лес</button>
+                <button class="option-btn">🌌 Космос</button>
+                <button class="option-btn">🕯 Тихая комната</button>
+                <button class="option-btn">🌧 Крыша под дождём</button>
+                <button class="option-btn">🏔 Снежные горы</button>
+            </div>
+            <button class="next-btn" id="next1">Продолжить ✨</button>
+        </div>
+    </div>
+
+    <!-- СООБЩЕНИЕ 1 -->
+    <div class="screen" id="msg1">
+        <div class="glass-panel">
+            <p class="message-text">Я хочу знать тебя настоящую.</p>
+            <p class="message-text">Не ту, которую видят все.</p>
+            <p class="message-text">А ту, которую ты обычно прячешь.</p>
+        </div>
+    </div>
+
+    <!-- ВОПРОС 2 -->
+    <div class="screen" id="q2">
+        <div class="glass-panel">
+            <h2>Что ты делаешь, когда тебе по-настоящему хорошо?</h2>
+            <p class="hint">Можно выбрать несколько</p>
+            <div class="options" data-question="Хорошо">
+                <button class="option-btn">😊 Улыбаюсь</button>
+                <button class="option-btn">🎵 Пою</button>
+                <button class="option-btn">💃 Танцую</button>
+                <button class="option-btn">🤫 Молчу</button>
+                <button class="option-btn">🤗 Обнимаю</button>
+                <button class="option-btn">✨ Замираю</button>
+            </div>
+            <button class="next-btn" id="next2">Продолжить ✨</button>
+        </div>
+    </div>
+
+    <!-- СООБЩЕНИЕ 2 -->
+    <div class="screen" id="msg2">
+        <div class="glass-panel">
+            <p class="message-text">Ты красивая, когда счастливая.</p>
+            <p class="message-text">Но мне нравится и когда ты просто молчишь рядом.</p>
+        </div>
+    </div>
+
+    <!-- ВОПРОС 3 -->
+    <div class="screen" id="q3">
+        <div class="glass-panel">
+            <h2>Как ты понимаешь, что человек — твой?</h2>
+            <p class="hint">Можно выбрать несколько</p>
+            <div class="options" data-question="Свой">
+                <button class="option-btn">👀 По взгляду</button>
+                <button class="option-btn">🌙 По молчанию</button>
+                <button class="option-btn">🤍 По заботе</button>
+                <button class="option-btn">😂 По смеху</button>
+                <button class="option-btn">🛡 По надёжности</button>
+                <button class="option-btn">🔥 По искре</button>
+            </div>
+            <button class="next-btn" id="next3">Продолжить ✨</button>
+        </div>
+    </div>
+
+    <!-- СООБЩЕНИЕ 3 -->
+    <div class="screen" id="msg3">
+        <div class="glass-panel">
+            <p class="message-text">Я хочу быть тем человеком,</p>
+            <p class="message-text">которому ты можешь всё это рассказать.</p>
+            <p class="message-text">И тем, кто не подведёт.</p>
+        </div>
+    </div>
+
+    <!-- ВОПРОС 4 -->
+    <div class="screen" id="q4">
+        <div class="glass-panel">
+            <h2>Что бы ты хотела, чтобы я знал о тебе?</h2>
+            <p class="hint">Можно выбрать несколько</p>
+            <div class="options" data-question="О тебе">
+                <button class="option-btn">😴 Что я устаю</button>
+                <button class="option-btn">🌧 Что я грущу</button>
+                <button class="option-btn">🌸 Что я нежная</button>
+                <button class="option-btn">⚔ Что я сильная</button>
+                <button class="option-btn">🤍 Что я нуждаюсь в тебе</button>
+                <button class="option-btn">🖤 Что я боюсь</button>
+            </div>
+            <button class="next-btn" id="next4">Продолжить ✨</button>
+        </div>
+    </div>
+
+    <!-- ФИНАЛ -->
+    <div class="screen" id="finale">
+        <div class="glass-panel finale-panel">
+            <p class="finale-line">Варя.</p>
+            <p class="finale-line">Я не знаю, что будет завтра.</p>
+            <p class="finale-line">Но я знаю, что хочу, чтобы ты была в моём завтра.</p>
+            <p class="finale-line">Спасибо, что ты есть. ❤️</p>
+        </div>
     </div>
 
     <script src="script.js"></script>
 </body>
-        </html>
+</html>
