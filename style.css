@@ -82,11 +82,7 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
         radial-gradient(1px 1px at 68% 32%, rgba(255,200,200,0.85), transparent),
         radial-gradient(1px 1px at 79% 8%, rgba(200,220,255,0.8), transparent),
         radial-gradient(1px 1px at 88% 48%, rgba(255,255,255,0.95), transparent),
-        radial-gradient(1px 1px at 6% 62%, rgba(255,180,180,0.85), transparent),
-        radial-gradient(1px 1px at 22% 78%, rgba(210,230,255,0.7), transparent),
-        radial-gradient(1px 1px at 45% 88%, rgba(255,255,255,0.95), transparent),
-        radial-gradient(1px 1px at 65% 72%, rgba(255,200,200,0.8), transparent),
-        radial-gradient(1px 1px at 82% 90%, rgba(255,255,255,0.9), transparent);
+        radial-gradient(1px 1px at 6% 62%, rgba(255,180,180,0.85), transparent);
     background-size:1200px 800px;
     animation:starsDrift 180s linear infinite;
     opacity:0.9;
@@ -246,7 +242,6 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
 .bunny {
     font-size:130px;
     cursor:pointer;
-    animation:bunnyPulse 2.5s ease-in-out infinite;
     filter:drop-shadow(0 0 30px rgba(255, 200, 220, 0.7));
     transition:transform 0.3s ease;
     user-select:none;
@@ -254,36 +249,40 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     position:absolute;
     opacity:0;
     pointer-events:none;
-    transform:translate(-50%, -50%);
+    transform:translate(-50%, -50%) scale(0.5);
 }
 .bunny.visible {
     opacity:1;
     pointer-events:auto;
+    transform:translate(-50%, -50%) scale(1);
+    animation:bunnyPulse 2.5s ease-in-out infinite;
 }
 .bunny:active { transform:translate(-50%, -50%) scale(1.15); }
 @keyframes bunnyPulse {
     0%,100% { transform:translate(-50%, -50%) scale(1); filter:drop-shadow(0 0 25px rgba(255, 200, 220, 0.6)); }
     50% { transform:translate(-50%, -50%) scale(1.08); filter:drop-shadow(0 0 45px rgba(255, 200, 220, 0.95)); }
 }
+
 .bunny-text {
     font-family:"Cormorant Garamond",serif;
     font-size:22px;
     color:#e8d8e0;
     letter-spacing:3px;
-    animation:bunnyTextPulse 2.5s ease-in-out infinite;
     z-index:31;
     position:absolute;
     opacity:0;
-    transition:opacity 1s ease;
+    transition:opacity 1s ease 0.5s;
     transform:translate(-50%, -50%);
     pointer-events:none;
     white-space:nowrap;
+    text-shadow:0 0 20px rgba(255,180,220,0.6);
 }
 .bunny-text.visible {
     opacity:1;
+    animation:bunnyTextPulse 2.5s ease-in-out infinite;
 }
 @keyframes bunnyTextPulse {
-    0%,100% { opacity:0.6; }
+    0%,100% { opacity:0.7; }
     50% { opacity:1; }
 }
 
@@ -294,7 +293,15 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     cursor:crosshair;
     touch-action:none;
     z-index:2;
+    transition:opacity 2s ease, filter 2s ease, transform 2s ease;
+    transform-origin:center center;
 }
+#scratchCanvas.fade-away {
+    opacity:0;
+    filter:blur(25px);
+    transform:scale(1.15);
+}
+
 .scratch-hint {
     position:absolute;
     bottom:30px; left:50%;
@@ -306,6 +313,7 @@ h1 { font-family:"Cormorant Garamond",serif; font-weight:300; letter-spacing:3px
     pointer-events:none;
     animation:hintPulse 3s ease-in-out infinite;
     z-index:3;
+    transition:opacity 0.8s ease;
 }
 @keyframes hintPulse {
     0%,100% { opacity:0.4; }
