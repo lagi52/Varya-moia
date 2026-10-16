@@ -213,10 +213,6 @@ var TELEGRAM_CHAT_ID = '5262922399';
             ctx.fillStyle = 'rgba(255, 200, 220, ' + (Math.random()*0.06) + ')';
             ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 1);
         }
-        ctx.fillStyle = 'rgba(255, 200, 220, 0.25)';
-        ctx.font = '300 16px Raleway, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('СОТРИ ПАЛЬЦЕМ', canvas.width/2, canvas.height/2);
     }
 
     function getPos(e) {
@@ -240,11 +236,16 @@ var TELEGRAM_CHAT_ID = '5262922399';
             total++;
             if (img.data[i] === 0) clear++;
         }
-        if (clear / total > 0.5) {
+        if (clear / total > 0.45) {
             revealedMax = true;
             canvas.style.transition = 'opacity 1.2s ease';
             canvas.style.opacity = '0';
-            setTimeout(function(){ canvas.style.display = 'none'; }, 1200);
+            setTimeout(function(){
+                canvas.style.display = 'none';
+                document.getElementById('bunny').classList.add('visible');
+                document.getElementById('bunnyText').classList.add('visible');
+                document.getElementById('scratchHint').style.display = 'none';
+            }, 1200);
         }
     }
 
