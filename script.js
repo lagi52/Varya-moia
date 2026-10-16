@@ -187,7 +187,25 @@ var TELEGRAM_CHAT_ID = '5262922399';
     for (var i = 0; i < initial; i++) setTimeout(createParticle, i * 600);
 })();
 
-// ============ СТИРАНИЕ — БЫСТРОЕ, ЛИНИЯМИ ============
+// ============ ЗАЙЧИК — РАЗМЕЩАЕМ СРАЗУ ============
+function placeBunnyRandomly() {
+    var bunny = document.getElementById('bunny');
+    var text = document.getElementById('bunnyText');
+    // Случайное место чуть повыше, чтобы место для текста снизу было
+    var minX = 25, maxX = 75;
+    var minY = 30, maxY = 55;
+    var x = minX + Math.random() * (maxX - minX);
+    var y = minY + Math.random() * (maxY - minY);
+    bunny.style.left = x + '%';
+    bunny.style.top = y + '%';
+    text.style.left = x + '%';
+    text.style.top = (y + 13) + '%';
+}
+
+// Размещаем сразу при загрузке
+placeBunnyRandomly();
+
+// ============ СТИРАНИЕ ============
 (function(){
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) return;
@@ -228,7 +246,6 @@ var TELEGRAM_CHAT_ID = '5262922399';
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    // Стираем ЛИНИЯМИ с lineWidth = 150
     function scratchTo(x, y) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.lineCap = 'round';
@@ -236,12 +253,10 @@ var TELEGRAM_CHAT_ID = '5262922399';
         ctx.lineWidth = 150;
 
         if (lastX === null) {
-            // Первая точка — рисуем точку
             ctx.beginPath();
             ctx.arc(x, y, 75, 0, Math.PI * 2);
             ctx.fill();
         } else {
-            // Между точками — линия (нет разрывов при быстром движении)
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
             ctx.lineTo(x, y);
@@ -264,22 +279,10 @@ var TELEGRAM_CHAT_ID = '5262922399';
             }
             if (clear / total > 0.5) {
                 revealedMax = true;
-                revealBunny();
+                // Слой красиво растворяется
+                canvas.classList.add('fade-away');
             }
         } catch(e) {}
-    }
-
-    function revealBunny() {
-        canvas.classList.add('fade-away');
-        var hint = document.getElementById('scratchHint');
-        if (hint) hint.style.opacity = '0';
-
-        setTimeout(function(){
-            canvas.style.display = 'none';
-            placeBunnyRandomly();
-            document.getElementById('bunny').classList.add('visible');
-            document.getElementById('bunnyText').classList.add('visible');
-        }, 1800);
     }
 
     canvas.addEventListener('mousedown', function(e){ scratching = true; lastX = null; lastY = null; var p = getPos(e); scratchTo(p.x, p.y); checkPercent(); });
@@ -295,43 +298,52 @@ var TELEGRAM_CHAT_ID = '5262922399';
     resize();
 })();
 
-// ============ ЗАЙЧИК В СЛУЧАЙНОМ МЕСТЕ ============
-function placeBunnyRandomly() {
-    var bunny = document.getElementById('bunny');
-    var text = document.getElementById('bunnyText');
-    var minX = 25, maxX = 75;
-    var minY = 30, maxY = 65;
-    var x = minX + Math.random() * (maxX - minX);
-    var y = minY + Math.random() * (maxY - minY);
-    bunny.style.left = x + '%';
-    bunny.style.top = y + '%';
-    text.style.left = x + '%';
-    text.style.top = (y + 15) + '%';
-}
-
-// ============ ЗАЙЧИК + ДИАФРАГМА ============
+// ============ КЛИК НА ЗАЙЧИКА — ВСЁ РАСТВОРЯЕТСЯ ============
 document.getElementById('bunny').addEventListener('click', function(e){
     e.stopPropagation();
+    var bunny = document.getElementById('bunny');
+    var text = document.getElementById('bunnyText');
     var iris = document.getElementById('irisCircle');
-    iris.classList.remove('collapse');
-    iris.classList.add('expand');
 
+    // Позиция кролика для iris-эффекта
+    var bunnyRect = bunny.getBoundingClientRect();
+    var bunnyX = bunnyRect.left + bunnyRect.width / 2;
+    var bunnyY = bunnyRect.top + bunnyRect.height / 2;
+    iris.style.left = bunnyX + 'px';
+    iris.style.top = bunnyY + 'px';
+    iris.style.transform = 'translate(-50%, -50%)';
+
+    // Убираем pointer-events, чтобы клик не мешал
+    bunny.style.pointerEvents = 'none';
+
+    // Начинаем растворение всей сцены
+    document.getElementById('scratchScreen').classList.add('fade-out');
+
+    // Одновременно iris-эффект от зайчика
     setTimeout(function(){
-        document.getElementById('scratchScreen').classList.remove('active');
-        setTimeout(function(){
-            document.getElementById('scratchScreen').style.display = 'none';
-            var q1 = document.getElementById('q1');
-            q1.style.display = 'flex';
-            setTimeout(function(){ q1.classList.add('active'); }, 50);
-        }, 300);
-
-        iris.classList.remove('expand');
-        iris.classList.add('collapse');
+        iris.classList.remove('collapse');
+        iris.classList.add('expand');
 
         setTimeout(function(){
-            iris.classList.remove('collapse');
-        }, 1200);
-    }, 1200);
+            document.getElementById('scratchScreen').classList.remove('active');
+            setTimeout(function(){
+                document.getElementById('scratchScreen').style.display = 'none';
+                var q1 = document.getElementById('q1');
+                q1.style.display = 'flex';
+                setTimeout(function(){ q1.classList.add('active'); }, 50);
+            }, 300);
+
+            iris.classList.remove('expand');
+            iris.classList.add('collapse');
+
+            setTimeout(function(){
+                iris.classList.remove('collapse');
+                // Сброс позиции iris на центр
+                iris.style.left = '50%';
+                iris.style.top = '50%';
+            }, 1400);
+        }, 1400);
+    }, 1000);
 });
 
 // ============ ЭКРАНЫ ============
